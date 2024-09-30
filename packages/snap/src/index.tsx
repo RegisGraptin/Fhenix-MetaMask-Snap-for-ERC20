@@ -1,5 +1,5 @@
 import { type OnRpcRequestHandler, type OnHomePageHandler, type OnUserInputHandler, UserInputEventType } from '@metamask/snaps-sdk';
-import { Heading, Box, Text, Bold, Form, Input, Button } from '@metamask/snaps-sdk/jsx';
+import { Heading, Box, Text, Bold, Form, Input, Button, Row, Address } from '@metamask/snaps-sdk/jsx';
 
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
@@ -48,8 +48,41 @@ type ERC20 = {
 };
 
 
+// https://docs.metamask.io/snaps/features/custom-ui/user-defined-components/
+// async function fetchAllRegisteredERC() {
+  
+  
 
-async function fetchAllRegisteredERC() {
+//   return (
+//     <>
+//       <Heading>ERC-20 encrypted tokens</Heading>
+//       {ercTokens && ercTokens.map((ercToken, i) => {
+//         return (
+//           <Text>Here some value</Text>
+//         )
+//       })}
+//     </>
+//   );
+// }
+
+  
+export const Tokens = ({ tokens }) => { // : undefined | ERC20[]
+  return (
+    <Box>
+      <Heading>Tokens</Heading>
+      {tokens && tokens.map((token) => (
+        <Row label={token.name}>
+          {/* <Address address={token.address} /> */}
+          <Text>{token.address}</Text>
+        </Row>
+      ))}
+    </Box>
+  );
+};
+    
+export const onHomePage: OnHomePageHandler = async () => {
+
+  console.log("Here home page");
   
   // Read storage dtaa
   const persistedData = await snap.request({
@@ -57,43 +90,16 @@ async function fetchAllRegisteredERC() {
     params: { operation: "get" },
   })
 
-  console.log("Extracted data", persistedData);
-
-  // const ercTokens: undefined | ERC20[] = persistedData["ercTokens"];
-
-  // console.log("Extracted token", ercTokens);
-
-  return (
-    
-      <Heading>ERC-20 encrypted tokens</Heading>
-    
-  );
-}
-
-  {/* {ercTokens && ercTokens.map((ercToken, i) => {
-        return (
-          <Text>Here some value</Text>
-        )
-      })} */}
-    
-export const onHomePage: OnHomePageHandler = async () => {
-
-  console.log("Here home page");
-
-  const persistedData = await snap.request({
-    method: "snap_manageState",
-    params: { operation: "get" },
-  })
-  
-
-
-    {/* fetchAllRegisteredERC() */}
+  let ercTokens: undefined | ERC20[] = undefined; 
+  if (persistedData) {
+    ercTokens = persistedData["ercTokens"] as undefined | ERC20[];
+  }
 
   return {
     content: (
       <Box>
-        
         <Heading>ERC-20 encrypted tokens</Heading>
+        <Tokens tokens={ercTokens} />
         <Text>Welcome to my Snap home page!</Text>
         <Form name='input-form'>
           <Input name='token-address' placeholder='ERC20 address' />
