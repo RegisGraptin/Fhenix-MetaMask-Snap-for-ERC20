@@ -65,6 +65,23 @@ type ERC20 = {
 //   );
 // }
 
+async function readTokens() {
+  // Read existing data
+  const persistedData = await snap.request({
+    method: "snap_manageState",
+    params: { operation: "get" },
+  })
+
+  let ercTokens: ERC20[] = []; 
+  if (persistedData) {
+    if (persistedData["ercTokens"] !== undefined) {
+      ercTokens = persistedData["ercTokens"] as ERC20[];
+    }
+  }
+  return ercTokens;
+}
+
+
   
 export const Tokens = ({ tokens }) => { // : undefined | ERC20[]
   return (
@@ -84,16 +101,8 @@ export const onHomePage: OnHomePageHandler = async () => {
 
   console.log("Here home page");
   
-  // Read storage dtaa
-  const persistedData = await snap.request({
-    method: "snap_manageState",
-    params: { operation: "get" },
-  })
-
-  let ercTokens: undefined | ERC20[] = undefined; 
-  if (persistedData) {
-    ercTokens = persistedData["ercTokens"] as undefined | ERC20[];
-  }
+  // Read storage data
+  let ercTokens = await readTokens();
 
   return {
     content: (
@@ -111,26 +120,33 @@ export const onHomePage: OnHomePageHandler = async () => {
 };
 
 
+
+
 export const onUserInput: OnUserInputHandler = async ({id, event}) => {
   if (event.type === UserInputEventType.FormSubmitEvent) {
 
+    let userAddress = event.value["token-address"] as string;
 
-    let fakeToken: ERC20 = {
-      address: "0x0000000000001",
-      name: "FTM"
+    let tokens: ERC20[] = await readTokens();
+    // Does the token already exists ? 
+    let alreadyExists = tokens.some(token => token.address === userAddress);
+
+    if (!alreadyExists) {
+      let fakeToken: ERC20 = {
+        address: userAddress,
+        name: "FTM"
+      }
+      tokens.push(fakeToken);
+      
+      // Update the token list accordinlgy
+      await snap.request({
+        method: "snap_manageState",
+        params: {
+          operation: "update",
+          newState: { ercTokens: tokens },
+        },
+      });
     }
-
-    await snap.request({
-      method: "snap_manageState",
-      params: {
-        operation: "update",
-        newState: { ercTokens: [fakeToken] },
-      },
-    })
-
-    
-    console.log("Added value:")
-    console.log(event.value["token-address"])
 
     await snap.request({
       method: "snap_updateInterface",
