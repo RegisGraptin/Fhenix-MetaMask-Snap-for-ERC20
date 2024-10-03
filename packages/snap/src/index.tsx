@@ -1,5 +1,6 @@
 import { type OnRpcRequestHandler, type OnHomePageHandler, type OnUserInputHandler, UserInputEventType } from '@metamask/snaps-sdk';
 import { Heading, Box, Text, Bold, Form, Input, Button, Row, Address } from '@metamask/snaps-sdk/jsx';
+import { isAddress } from 'web3-validator';
 
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
@@ -127,25 +128,31 @@ export const onUserInput: OnUserInputHandler = async ({id, event}) => {
 
     let userAddress = event.value["token-address"] as string;
 
-    let tokens: ERC20[] = await readTokens();
-    // Does the token already exists ? 
-    let alreadyExists = tokens.some(token => token.address === userAddress);
+    if (!isAddress(userAddress)) {
+      console.log("Address invalid...")
+    }
+    else {
+      let tokens: ERC20[] = await readTokens();
+      // Does the token already exists ? 
+      let alreadyExists = tokens.some(token => token.address === userAddress);
 
-    if (!alreadyExists) {
-      let fakeToken: ERC20 = {
-        address: userAddress,
-        name: "FTM"
+      if (!alreadyExists) {
+
+        let fakeToken: ERC20 = {
+          address: userAddress,
+          name: "FTM"
+        }
+        tokens.push(fakeToken);
+        
+        // Update the token list accordinlgy
+        await snap.request({
+          method: "snap_manageState",
+          params: {
+            operation: "update",
+            newState: { ercTokens: tokens },
+          },
+        });
       }
-      tokens.push(fakeToken);
-      
-      // Update the token list accordinlgy
-      await snap.request({
-        method: "snap_manageState",
-        params: {
-          operation: "update",
-          newState: { ercTokens: tokens },
-        },
-      });
     }
 
     await snap.request({
