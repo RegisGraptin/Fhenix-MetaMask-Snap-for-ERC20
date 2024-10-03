@@ -1,6 +1,8 @@
 import { type OnRpcRequestHandler, type OnHomePageHandler, type OnUserInputHandler, UserInputEventType } from '@metamask/snaps-sdk';
 import { Heading, Box, Text, Bold, Form, Input, Button, Row, Address } from '@metamask/snaps-sdk/jsx';
 import { isAddress } from 'web3-validator';
+import { ethers } from "ethers";
+
 
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
@@ -66,6 +68,30 @@ type ERC20 = {
 //   );
 // }
 
+const ERC20_ABI = [
+  "function name() view returns (string)"
+];
+
+// Function to get the ERC20 token name
+async function getERC20TokenName(contractAddress: string) {
+  try {
+      // Connect to the Ethereum provider (MetaMask Snap can use this provider)
+      const provider = new ethers.BrowserProvider(ethereum);
+
+      // Create a contract instance for the ERC-20 token
+      const contract = new ethers.Contract(contractAddress, ERC20_ABI, provider);
+
+      // Call the `name()` function to get the token name
+      const tokenName = await contract.name();
+      return tokenName;
+  } catch (error) {
+      console.error("Error fetching token name:", error);
+      throw error;
+  }
+}
+
+
+
 async function readTokens() {
   // Read existing data
   const persistedData = await snap.request({
@@ -123,6 +149,7 @@ export const onHomePage: OnHomePageHandler = async () => {
 
 
 
+
 export const onUserInput: OnUserInputHandler = async ({id, event}) => {
   if (event.type === UserInputEventType.FormSubmitEvent) {
 
@@ -138,9 +165,14 @@ export const onUserInput: OnUserInputHandler = async ({id, event}) => {
 
       if (!alreadyExists) {
 
+        // Fetch information on the token on chain
+        let name = await getERC20TokenName(userAddress);
+        console.log(name);
+        
+
         let fakeToken: ERC20 = {
           address: userAddress,
-          name: "FTM"
+          name: name
         }
         tokens.push(fakeToken);
         
