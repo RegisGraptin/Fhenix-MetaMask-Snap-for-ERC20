@@ -53,8 +53,8 @@ type ERC20 = {
 
 // https://docs.metamask.io/snaps/features/custom-ui/user-defined-components/
 // async function fetchAllRegisteredERC() {
-  
-  
+
+
 
 //   return (
 //     <>
@@ -75,18 +75,18 @@ const ERC20_ABI = [
 // Function to get the ERC20 token name
 async function getERC20TokenName(contractAddress: string) {
   try {
-      // Connect to the Ethereum provider (MetaMask Snap can use this provider)
-      const provider = new ethers.BrowserProvider(ethereum);
+    // Connect to the Ethereum provider (MetaMask Snap can use this provider)
+    const provider = new ethers.BrowserProvider(ethereum);
 
-      // Create a contract instance for the ERC-20 token
-      const contract = new ethers.Contract(contractAddress, ERC20_ABI, provider);
+    // Create a contract instance for the ERC-20 token
+    const contract = new ethers.Contract(contractAddress, ERC20_ABI, provider);
 
-      // Call the `name()` function to get the token name
-      const tokenName = await contract.name();
-      return tokenName;
+    // Call the `name()` function to get the token name
+    const tokenName = await contract.name();
+    return tokenName;
   } catch (error) {
-      console.error("Error fetching token name:", error);
-      throw error;
+    console.error("Error fetching token name:", error);
+    throw error;
   }
 }
 
@@ -99,7 +99,7 @@ async function readTokens() {
     params: { operation: "get" },
   })
 
-  let ercTokens: ERC20[] = []; 
+  let ercTokens: ERC20[] = [];
   if (persistedData) {
     if (persistedData["ercTokens"] !== undefined) {
       ercTokens = persistedData["ercTokens"] as ERC20[];
@@ -109,7 +109,7 @@ async function readTokens() {
 }
 
 
-  
+
 export const Tokens = ({ tokens }) => { // : undefined | ERC20[]
   return (
     <Box>
@@ -123,11 +123,66 @@ export const Tokens = ({ tokens }) => { // : undefined | ERC20[]
     </Box>
   );
 };
-    
+
 export const onHomePage: OnHomePageHandler = async () => {
 
-  console.log("Here home page");
+
+
+  // Check user network
+  // ethereum.request({
+  //   method: "wallet_addEthereumChain",
+  //   params: [{
+  //     chainId: "8008135",
+  //     rpcUrls: ["https://api.helium.fhenix.zone"],
+  //     chainName: "Fhenix Helium",
+  //     nativeCurrency: {
+  //       name: "TFHE",
+  //       symbol: "tFHE",
+  //       decimals: 18
+  //     },
+  //     blockExplorerUrls: ["https://explorer.helium.fhenix.zone"]
+  //   }]
+  // });
+
+
+
+  const fhenixChainId = '0x7a31c7'; // Fhenix Helium chain ID (8008135 in hex)
+  const currentChainId = await ethereum.request({ method: 'eth_chainId' });
   
+  console.log("Current chain id");
+  console.log(currentChainId);
+
+  if (currentChainId !== fhenixChainId) {
+    return {
+      content: (
+        <Box>
+          <Heading>Need to change the chain</Heading>
+        </Box>
+      ),
+    };
+  }
+  //   try {
+  //     await ethereum.request({
+  //       method: 'wallet_switchEthereumChain',
+  //       params: [{ chainId: fhenixChainId }],
+  //     });
+  //     console.log('Switched to Fhenix Helium network');
+  //   } catch (error) {
+  //     if (error.code === 4902) {
+  //       // Network not found, add it
+  //       console.log('Fhenix Helium network not found. Adding it...');
+  //       // await addFhenixNetwork();
+  //     } else {
+  //       console.error('Failed to switch network:', error);
+  //     }
+  //   }
+  // } else {
+  //   console.log('Already on the Fhenix Helium network');
+  // }
+
+
+  console.log("Here home page");
+
   // Read storage data
   let ercTokens = await readTokens();
 
@@ -150,7 +205,7 @@ export const onHomePage: OnHomePageHandler = async () => {
 
 
 
-export const onUserInput: OnUserInputHandler = async ({id, event}) => {
+export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
   if (event.type === UserInputEventType.FormSubmitEvent) {
 
     let userAddress = event.value["token-address"] as string;
@@ -168,14 +223,14 @@ export const onUserInput: OnUserInputHandler = async ({id, event}) => {
         // Fetch information on the token on chain
         let name = await getERC20TokenName(userAddress);
         console.log(name);
-        
+
 
         let fakeToken: ERC20 = {
           address: userAddress,
           name: name
         }
         tokens.push(fakeToken);
-        
+
         // Update the token list accordinlgy
         await snap.request({
           method: "snap_manageState",
@@ -190,7 +245,7 @@ export const onUserInput: OnUserInputHandler = async ({id, event}) => {
     await snap.request({
       method: "snap_updateInterface",
       params: {
-        id, 
+        id,
         ui: (
           <Box>
             <Heading>Here is the form after execution</Heading>
