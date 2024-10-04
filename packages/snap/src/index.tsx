@@ -2,6 +2,10 @@ import { type OnRpcRequestHandler, type OnHomePageHandler, type OnUserInputHandl
 import { Heading, Box, Text, Bold, Form, Input, Button, Row, Address } from '@metamask/snaps-sdk/jsx';
 import { isAddress } from 'web3-validator';
 import { ethers } from "ethers";
+import { ERC20 } from './types/snapState';
+import { ListTokens } from './components/ListTokens';
+import { readTokensFromStorage } from './utils/storage';
+
 
 
 /**
@@ -45,10 +49,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   }
 };
 
-type ERC20 = {
-  name: string;
-  address: string;
-};
+
 
 
 // https://docs.metamask.io/snaps/features/custom-ui/user-defined-components/
@@ -92,37 +93,6 @@ async function getERC20TokenName(contractAddress: string) {
 
 
 
-async function readTokens() {
-  // Read existing data
-  const persistedData = await snap.request({
-    method: "snap_manageState",
-    params: { operation: "get" },
-  })
-
-  let ercTokens: ERC20[] = [];
-  if (persistedData) {
-    if (persistedData["ercTokens"] !== undefined) {
-      ercTokens = persistedData["ercTokens"] as ERC20[];
-    }
-  }
-  return ercTokens;
-}
-
-
-
-export const Tokens = ({ tokens }) => { // : undefined | ERC20[]
-  return (
-    <Box>
-      <Heading>Tokens</Heading>
-      {tokens && tokens.map((token) => (
-        <Row label={token.name}>
-          {/* <Address address={token.address} /> */}
-          <Text>{token.address}</Text>
-        </Row>
-      ))}
-    </Box>
-  );
-};
 
 export const onHomePage: OnHomePageHandler = async () => {
 
@@ -181,16 +151,14 @@ export const onHomePage: OnHomePageHandler = async () => {
   // }
 
 
-  console.log("Here home page");
-
-  // Read storage data
-  let ercTokens = await readTokens();
+  // Read tokens from storage
+  let tokens = await readTokensFromStorage();
 
   return {
     content: (
       <Box>
         <Heading>ERC-20 encrypted tokens</Heading>
-        <Tokens tokens={ercTokens} />
+        <ListTokens tokens={tokens} />
         <Text>Welcome to my Snap home page!</Text>
         <Form name='input-form'>
           <Input name='token-address' placeholder='ERC20 address' />
@@ -214,7 +182,7 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
       console.log("Address invalid...")
     }
     else {
-      let tokens: ERC20[] = await readTokens();
+      let tokens: ERC20[] = await readTokensFromStorage();
       // Does the token already exists ? 
       let alreadyExists = tokens.some(token => token.address === userAddress);
 
