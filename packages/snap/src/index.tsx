@@ -6,6 +6,8 @@ import { ERC20 } from './types/snapState';
 import { ListTokens } from './components/ListTokens';
 import { readTokensFromStorage } from './utils/storage';
 
+// https://github.com/FhenixProtocol/fhenix-contracts/blob/main/contracts/experimental/token/FHERC20/FHERC20.sol
+import { abi } from "./data/FHERC20.json";
 
 
 /**
@@ -69,9 +71,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 //   );
 // }
 
-const ERC20_ABI = [
-  "function name() view returns (string)"
-];
+
 
 // Function to get the ERC20 token name
 async function getERC20TokenName(contractAddress: string) {
@@ -80,7 +80,7 @@ async function getERC20TokenName(contractAddress: string) {
     const provider = new ethers.BrowserProvider(ethereum);
 
     // Create a contract instance for the ERC-20 token
-    const contract = new ethers.Contract(contractAddress, ERC20_ABI, provider);
+    const contract = new ethers.Contract(contractAddress, abi, provider);
 
     // Call the `name()` function to get the token name
     const tokenName = await contract.name();
@@ -159,7 +159,7 @@ export const onHomePage: OnHomePageHandler = async () => {
       <Box>
         <Heading>ERC-20 encrypted tokens</Heading>
         <ListTokens tokens={tokens} />
-        <Text>Welcome to my Snap home page!</Text>
+        <Text>Add a new token</Text>
         <Form name='input-form'>
           <Input name='token-address' placeholder='ERC20 address' />
           <Button type='submit'>Add</Button>
