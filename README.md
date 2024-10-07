@@ -75,3 +75,8 @@ script in the `lavamoat.allowScripts` section of `package.json`.
 
 See the documentation for [@lavamoat/allow-scripts](https://github.com/LavaMoat/LavaMoat/tree/main/packages/allow-scripts)
 for more information.
+
+
+Testing ERC20 Wrapped
+0x22517a79A502544d6FeD3a882B755be6A3C79606
+
