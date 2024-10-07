@@ -7,7 +7,8 @@ import { ListTokens } from './components/ListTokens';
 import { readTokensFromStorage } from './utils/storage';
 
 // https://github.com/FhenixProtocol/fhenix-contracts/blob/main/contracts/experimental/token/FHERC20/FHERC20.sol
-import { abi } from "./data/FHERC20.json";
+// => Using Wrap one 
+import FHERC20 from "./data/FHERC20.json";
 
 
 /**
@@ -51,6 +52,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   }
 };
 
+// Connect to the Ethereum provider (MetaMask Snap can use this provider)
+const provider = new ethers.BrowserProvider(ethereum);
+
 
 
 
@@ -59,32 +63,25 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
 
 
-//   return (
-//     <>
-//       <Heading>ERC-20 encrypted tokens</Heading>
-//       {ercTokens && ercTokens.map((ercToken, i) => {
-//         return (
-//           <Text>Here some value</Text>
-//         )
-//       })}
-//     </>
-//   );
-// }
-
-
 
 // Function to get the ERC20 token name
-async function getERC20TokenName(contractAddress: string) {
+async function getERC20Info(contractAddress: string) : Promise<ERC20> {
   try {
-    // Connect to the Ethereum provider (MetaMask Snap can use this provider)
-    const provider = new ethers.BrowserProvider(ethereum);
-
     // Create a contract instance for the ERC-20 token
-    const contract = new ethers.Contract(contractAddress, abi, provider);
+    const contract = new ethers.Contract(contractAddress, FHERC20.abi, provider);
 
     // Call the `name()` function to get the token name
     const tokenName = await contract.name();
-    return tokenName;
+    const tokenSymbol = await contract.symbol();
+    const tokenDecimal = await contract.decimals();
+
+    return {
+      name: tokenName,
+      symbol: tokenSymbol,
+      decimal: tokenDecimal,
+      address: contractAddress
+    } as ERC20;
+
   } catch (error) {
     console.error("Error fetching token name:", error);
     throw error;
@@ -189,16 +186,11 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
       if (!alreadyExists) {
 
         // Fetch information on the token on chain
-        let name = await getERC20TokenName(userAddress);
-        console.log(name);
+        let token = await getERC20Info(userAddress);
+        tokens.push(token);
 
-
-        let fakeToken: ERC20 = {
-          address: userAddress,
-          name: name
-        }
-        tokens.push(fakeToken);
-
+        console.log(token);
+        
         // Update the token list accordinlgy
         await snap.request({
           method: "snap_manageState",

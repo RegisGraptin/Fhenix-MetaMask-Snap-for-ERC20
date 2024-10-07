@@ -8,7 +8,7 @@ export const ListTokens = ({ tokens }) => { // ERC20[]
             {tokens && tokens.map((token: ERC20) => (
                 <Row label={token.name}>
                     {/* <Address address={token.address} /> */}
-                    <Text>{token.address}</Text>
+                    <Text>{token.symbol}</Text>
                 </Row>
             ))}
         </Box>
