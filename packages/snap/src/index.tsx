@@ -52,8 +52,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   }
 };
 
-// Connect to the Ethereum provider (MetaMask Snap can use this provider)
-const provider = new ethers.BrowserProvider(ethereum);
 
 
 
@@ -67,6 +65,10 @@ const provider = new ethers.BrowserProvider(ethereum);
 // Function to get the ERC20 token name
 async function getERC20Info(contractAddress: string) : Promise<ERC20> {
   try {
+    
+    // Connect to the Ethereum provider (MetaMask Snap can use this provider)
+    const provider = new ethers.BrowserProvider(ethereum);
+    
     // Create a contract instance for the ERC-20 token
     const contract = new ethers.Contract(contractAddress, FHERC20.abi, provider);
 
@@ -75,10 +77,12 @@ async function getERC20Info(contractAddress: string) : Promise<ERC20> {
     const tokenSymbol = await contract.symbol();
     const tokenDecimal = await contract.decimals();
 
+    console.log(tokenDecimal);
+
     return {
       name: tokenName,
       symbol: tokenSymbol,
-      decimal: tokenDecimal,
+      decimal: Number(tokenDecimal),
       address: contractAddress
     } as ERC20;
 
@@ -186,6 +190,7 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
       if (!alreadyExists) {
 
         // Fetch information on the token on chain
+        console.log(userAddress);
         let token = await getERC20Info(userAddress);
         tokens.push(token);
 
